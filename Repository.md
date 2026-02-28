@@ -17,10 +17,10 @@
 ### Аннотации
 
 | Аннотация | Описание |
-| :--- | :--- |
 | `@Repository` | Указывает, что класс работает с БД. (Хотя при использовании JpaRepository её можно не писать, она ставится автоматически). |
 | `@Query` | Позволяет написать свой SQL или JPQL запрос вручную, если возможностей стандартных методов не хватает. |
 | `@Param` | Связывает переменную в методе с параметром в `@Query`. |
+| `@Modifying` | Обязательная аннотация вместе с `@Query`, если ваш запрос изменяет данные (UPDATE или DELETE). |
 
 ---
 
@@ -32,15 +32,20 @@
 
 ### Примеры кода
 ```java
-// Наследуемся от JpaRepository: <Сущность, Тип первичного ключа>
+@Repository // Опционально, но делает код более явным
 public interface UserRepository extends JpaRepository<User, Long> {
 
     // Spring сам создаст запрос: SELECT * FROM users WHERE email = ?
     Optional<User> findByEmail(String email);
 
-    // Пример кастомного запроса
+    // ПРИМЕР: Кастомный SELECT запрос
     @Query("SELECT u FROM User u WHERE u.role = :role")
     List<User> findAllByRole(@Param("role") Role role);
+
+    // ПРИМЕР: Кастомный UPDATE запрос (обратите внимание на @Modifying!)
+    @Modifying
+    @Query("UPDATE User u SET u.status = :status WHERE u.id = :id")
+    void updateUserStatus(@Param("id") Long id, @Param("status") String status);
 
     boolean existsByEmail(String email);
 }

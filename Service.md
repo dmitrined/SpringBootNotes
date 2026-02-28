@@ -36,29 +36,32 @@
 ```java
 @Service
 @RequiredArgsConstructor
-public class AuthService {
+public class UserService {
 
     private final UserRepository userRepository; // Репозиторий
     private final PasswordEncoder passwordEncoder; // Утилита
 
-    @Transactional // Важно для создания данных
+    // ПРИМЕР 1: Запись в базу. Если будет ошибка, изменения откатятся.
+    @Transactional 
     public AuthResponse register(RegisterRequest request) {
-        // Проверяем логику: не занят ли email?
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new AlreadyExistsException("Email already taken");
         }
 
-        // Создаем пользователя (Бизнес-процесс)
         User user = User.builder()
-                .username(request.getUsername())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .build();
 
         userRepository.save(user);
+        return new AuthResponse("Success", user.getEmail());
+    }
 
-        // Возвращаем DTO
-        return new AuthResponse("Success", user.getUsername());
+    // ПРИМЕР 2: Только чтение. readOnly = true улучшает производительность!
+    @Transactional(readOnly = true)
+    public UserResponse getUserInfo(Long id) {
+        User user = userRepository.findById(id).orElseThrow();
+        return new UserResponse(user.getEmail(), user.getFirstName());
     }
 }
 ```

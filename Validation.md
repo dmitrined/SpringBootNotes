@@ -33,6 +33,21 @@ public class RegisterRequest {
     @Size(min = 6)
     private String password;
 }
+
+// ПРИМЕР 2: Валидация чисел и дат
+@Data
+public class BookingRequest {
+    @NotNull
+    @Positive(message = "Price must be greater than zero")
+    private BigDecimal price;
+
+    @Min(value = 18, message = "Age must be at least 18")
+    @Max(value = 100, message = "Age cannot be more than 100")
+    private Integer age;
+
+    @FutureOrPresent(message = "Booking date must be today or in the future")
+    private LocalDate bookingDate;
+}
 ```
 
 2. **В Контроллере**: добавляем аннотацию `@Valid`.

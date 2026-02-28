@@ -43,18 +43,34 @@
 ### Примеры кода
 ```java
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/users")
 @RequiredArgsConstructor // Создает конструктор для внедрения зависимостей
-public class AuthController {
+public class UserController {
 
-    private final AuthService authService; // Внедряем сервис
+    private final UserService userService; // Внедряем сервис
 
+    // ПРИМЕР 1: POST запрос с телом (JSON) и валидацией
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
-        // Вызываем сервис
-        AuthResponse response = authService.register(request);
+    public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request) {
+        UserResponse response = userService.register(request);
         // Возвращаем статус 201 Created
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    // ПРИМЕР 2: GET запрос с переменной в URL (@PathVariable)
+    // URL ожидается: /api/users/123
+    @GetMapping("/{id}")
+    public ResponseEntity<UserResponse> getUserById(@PathVariable("id") Long id) {
+        UserResponse response = userService.findById(id);
+        return ResponseEntity.ok(response);
+    }
+
+    // ПРИМЕР 3: GET запрос с параметром в строке запроса (@RequestParam)
+    // URL ожидается: /api/users/search?name=Ivan
+    @GetMapping("/search")
+    public ResponseEntity<List<UserResponse>> searchUsers(@RequestParam("name") String name) {
+        List<UserResponse> users = userService.findByName(name);
+        return ResponseEntity.ok(users);
     }
 }
 ```

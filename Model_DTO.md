@@ -47,8 +47,14 @@ public class User {
     @Column(nullable = false)
     private String password; // Это поле НИКОГДА не должно попасть в DTO
 
-    private String firstName;
-    private String lastName;
+    // ПРИМЕР: Связь "Много к Одному" (Много пользователей могут иметь одну роль)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "role_id")
+    private Role role;
+
+    // ПРИМЕР: Связь "Один ко Многим" (У одного пользователя много постов)
+    @OneToMany(mappedBy = "user")
+    private List<Post> posts;
 }
 ```
 

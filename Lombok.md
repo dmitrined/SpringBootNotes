@@ -14,6 +14,7 @@
 | `@RequiredArgsConstructor` | Создает конструктор только для `final` полей (идеально для DI в сервисах). |
 | `@Data` | "Всё в одном": включает Getter, Setter, ToString, EqualsAndHashCode и RequiredArgsConstructor. |
 | `@Builder` | Позволяет создавать объекты красиво: `User.builder().name("A").build()`. |
+| `@Slf4j` | Автоматически создает логгер (`private static final Logger log = ...`), чтобы вы могли писать `log.info(...)`. |
 
 ---
 
@@ -38,6 +39,14 @@ public class User {
     private String email;
 }
 // Всё! Код чистый и понятный.
+
+@Slf4j // ПРИМЕР: Логирование без создания Logger вручную
+@Service
+public class UserService {
+    public void createUser() {
+        log.info("Creating new user..."); // Теперь мы можем писать в консоль!
+    }
+}
 ```
 
 ---

@@ -29,6 +29,9 @@
 | `@InjectMocks` | Создает реальный объект и вставляет в него созданные `@Mock`. |
 | `@MockMvc` | Утилита для имитации HTTP-запросов к вашим контроллерам без запуска сервера. |
 | `@Spy` | Позволяет следить за реальным объектом, подменяя только часть его методов. |
+| `@ExtendWith` | Расширяет поведение тестов (например, с `MockitoExtension.class` для активации моков). |
+| `@AutoConfigureMockMvc` | Автоматически настраивает `MockMvc` для интеграционных тестов. |
+| `@Autowired` | Внедряет зависимость (bean) из контекста Spring прямо в тестовый класс. |
 
 ---
 
@@ -66,6 +69,9 @@ class AuthControllerIT {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @MockBean // ПРИМЕР: Подменяем реальный сервис на "пустышку" (чтобы не отправлять реальные email)
+    private EmailService emailService;
 
     @Test
     void login_ShouldReturn200() throws Exception {

@@ -55,6 +55,17 @@ public class SecurityConfig {
         return http.build();
     }
 }
+
+// ПРИМЕР ИСПОЛЬЗОВАНИЯ В СЕРВИСЕ (Method Security)
+@Service
+public class AdminService {
+
+    // Выполнится только если у пользователя есть роль ADMIN
+    @PreAuthorize("hasRole('ADMIN')")
+    public void deleteUser(Long id) {
+        // логика удаления
+    }
+}
 ```
 
 ---
