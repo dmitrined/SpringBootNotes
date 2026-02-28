@@ -18,19 +18,24 @@
 
 ### Как это работает?
 
-1. **В DTO**: вешаем аннотации на поля.
+2. **В DTO**: вешаем аннотации на поля.
 ```java
 @Data
+@Schema(description = "Запрос на регистрацию нового пользователя") // ПРИМЕР: Описание всего DTO
 public class RegisterRequest {
+    
     @NotBlank(message = "Username is mandatory")
     @Size(min = 3, max = 20)
+    @Schema(description = "Имя пользователя", example = "ivan_123") // ПРИМЕР: Поле и его правильный формат
     private String username;
 
     @Email(message = "Invalid email format")
+    @Schema(description = "Уникальный email", example = "ivan@gmail.com")
     private String email;
 
     @NotBlank
     @Size(min = 6)
+    @Schema(description = "Секретный пароль", example = "qwerty123456")
     private String password;
 }
 
