@@ -4,7 +4,33 @@
 
 ---
 
-### 1. Типы тестов
+### Зачем вообще нужно тестирование?
+Частый вопрос: *«Зачем писать тесты, если код и так работает?»*
+Проблема в том, что “работает” — это субъективное ощущение разработчика на пару сценариев. Тесты — это объективная проверка поведения системы с учетом граничных случаев и неправильного ввода. Ошибка, которая на первый взгляд не видна, может стоить компании очень дорого.
+
+**Цена ошибки**:
+- **В процессе написания кода** — исправить дешево.
+- **Во время интеграции** — дороже.
+- **В продакшене** — максимально дорого (страдает репутация, срочные хотфиксы, недовольство пользователей). 
+Тестирование минимизирует риск пропустить ошибку в продакшен.
+
+---
+
+### Пирамида тестирования
+Идеальное соотношение тестов в приложении:
+
+1. **Unit-тесты (Модульные)** — база пирамиды. Самые быстрые, изолированные и дешёвые. Тестируют один класс или метод (например, переключение статуса задачи). Их должно быть больше всего.
+2. **Integration-тесты (Интеграционные)** — середина. Поднимают контекст Spring, тестируют взаимодействие баз данных и сервисов. Их меньше, они медленнее.
+3. **UI / E2E тесты** — вершина. Имитируют работу реального пользователя в браузере (нажать кнопку формы логина). Самые медленные и хрупкие. Пишутся только для самых критических сценариев.
+
+---
+
+### Баланс
+Нельзя писать только UI-тесты или обходиться без тестов вообще. Плохо тестируемый код обычно сильно связан и имеет плохую архитектуру (нарушается Dependency Injection). Тестируемый код всегда имеет четкие слои и легко поддерживается.
+
+---
+
+### 1. Типы тестов в Spring Boot
 
 #### Unit-тесты (Модульные)
 - Тестируют **один маленький кусочек** кода (обычно один метод в сервисе).
@@ -121,6 +147,70 @@ class UserControllerIT {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated()); // Ожидаем ответ 201 Created
+    }
+}
+```
+
+---
+
+### 3. UI-тесты / E2E (End-to-End)
+Тестируем поведение реального пользователя через браузер. Обычно используются инструменты типа **Selenium** или **Selenide**. Поднимаем сервер на реальном порту и пишем код, который "кликает" по кнопкам.
+
+```java
+package com.example.ui;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.springframework.boot.test.context.SpringBootTest;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+// Тест поднимет приложение на порту 8080 для браузера
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+class UserRegistrationE2ETest {
+
+    private WebDriver driver;
+
+    @BeforeEach
+    void setUp() {
+        // Инициализируем Chrome драйвер
+        driver = new ChromeDriver();
+    }
+
+    @Test
+    void userShouldBeAbleToRegister() {
+        // 1. Открываем страницу регистрации (например, созданную через Thymeleaf)
+        driver.get("http://localhost:8080/register");
+
+        // 2. Находим элементы на странице по их ID
+        WebElement nameInput = driver.findElement(By.id("username"));
+        WebElement emailInput = driver.findElement(By.id("email"));
+        WebElement passwordInput = driver.findElement(By.id("password"));
+        WebElement submitButton = driver.findElement(By.id("submit-btn"));
+
+        // 3. Имитируем ввод текста пользователем
+        nameInput.sendKeys("Ivan");
+        emailInput.sendKeys("ivan@gmail.com");
+        passwordInput.sendKeys("secure123");
+        
+        // 4. Кликаем кнопку
+        submitButton.click();
+
+        // 5. Проверяем, что сервер успешно обработал данные и перекинул на страницу логина
+        assertEquals("http://localhost:8080/login", driver.getCurrentUrl());
+    }
+
+    @AfterEach
+    void tearDown() {
+        // Закрываем браузер после каждого теста
+        if (driver != null) {
+            driver.quit();
+        }
     }
 }
 ```
