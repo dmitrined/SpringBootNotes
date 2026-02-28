@@ -43,6 +43,7 @@
 ### Примеры кода
 ```java
 @Slf4j // ПРИМЕР: Добавляем логгер в контроллер
+@Tag(name = "User API", description = "Управление пользователями системы") // ПРИМЕР: Группировка для Swagger
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor // Создает конструктор для внедрения зависимостей
@@ -51,6 +52,7 @@ public class UserController {
     private final UserService userService; // Внедряем сервис
 
     // ПРИМЕР 1: POST запрос с телом (JSON) и валидацией
+    @Operation(summary = "Регистрация нового пользователя", description = "Создает пользователя и возвращает его данные")
     @PostMapping("/register")
     public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request) {
         UserResponse response = userService.register(request);
@@ -60,8 +62,10 @@ public class UserController {
 
     // ПРИМЕР 2: GET запрос с переменной в URL (@PathVariable)
     // URL ожидается: /api/users/123
+    @Operation(summary = "Получить пользователя по ID")
     @GetMapping("/{id}")
-    public ResponseEntity<UserResponse> getUserById(@PathVariable("id") Long id) {
+    public ResponseEntity<UserResponse> getUserById(
+            @Parameter(description = "ID пользователя базы данных") @PathVariable("id") Long id) {
         log.info("Received request to fetch user with id: {}", id); // Логируем входящий запрос
         UserResponse response = userService.findById(id);
         return ResponseEntity.ok(response);
@@ -69,8 +73,10 @@ public class UserController {
 
     // ПРИМЕР 3: GET запрос с параметром в строке запроса (@RequestParam)
     // URL ожидается: /api/users/search?name=Ivan
+    @Operation(summary = "Поиск пользователей по имени")
     @GetMapping("/search")
-    public ResponseEntity<List<UserResponse>> searchUsers(@RequestParam("name") String name) {
+    public ResponseEntity<List<UserResponse>> searchUsers(
+            @Parameter(description = "Имя для поиска (например, Ivan)") @RequestParam("name") String name) {
         List<UserResponse> users = userService.findByName(name);
         return ResponseEntity.ok(users);
     }
