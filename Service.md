@@ -34,6 +34,7 @@
 
 ### Примеры кода
 ```java
+@Slf4j // ПРИМЕР: Добавляем логгер в сервис
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -45,6 +46,7 @@ public class UserService {
     @Transactional 
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
+            log.warn("Registration failed. Email {} is already in use", request.getEmail()); // Логируем бизнес-ошибку
             throw new AlreadyExistsException("Email already taken");
         }
 
@@ -54,6 +56,8 @@ public class UserService {
                 .build();
 
         userRepository.save(user);
+        log.info("Successfully created new user with email: {}", user.getEmail()); // Логируем успех
+        
         return new AuthResponse("Success", user.getEmail());
     }
 

@@ -42,6 +42,7 @@
 
 ### Примеры кода
 ```java
+@Slf4j // ПРИМЕР: Добавляем логгер в контроллер
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor // Создает конструктор для внедрения зависимостей
@@ -61,6 +62,7 @@ public class UserController {
     // URL ожидается: /api/users/123
     @GetMapping("/{id}")
     public ResponseEntity<UserResponse> getUserById(@PathVariable("id") Long id) {
+        log.info("Received request to fetch user with id: {}", id); // Логируем входящий запрос
         UserResponse response = userService.findById(id);
         return ResponseEntity.ok(response);
     }

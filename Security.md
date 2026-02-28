@@ -57,12 +57,14 @@ public class SecurityConfig {
 }
 
 // ПРИМЕР ИСПОЛЬЗОВАНИЯ В СЕРВИСЕ (Method Security)
+@Slf4j
 @Service
 public class AdminService {
 
     // Выполнится только если у пользователя есть роль ADMIN
     @PreAuthorize("hasRole('ADMIN')")
     public void deleteUser(Long id) {
+        log.warn("Admin is attempting to delete user with id: {}", id); // Логируем важное действие!
         // логика удаления
     }
 }
