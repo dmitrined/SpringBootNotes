@@ -20,7 +20,19 @@
 
 2. **В DTO**: вешаем аннотации на поля.
 ```java
+package com.example.dto;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Schema(description = "Запрос на регистрацию нового пользователя") // ПРИМЕР: Описание всего DTO
 public class RegisterRequest {
     

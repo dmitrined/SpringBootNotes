@@ -32,22 +32,35 @@
 
 ### Примеры кода
 ```java
-@Repository // Опционально, но делает код более явным
+package com.example.repository;
+
+import com.example.model.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+
+@Repository // Эта аннотация опциональна для интерфейсов, наследующих JpaRepository, но полезна для читаемости
 public interface UserRepository extends JpaRepository<User, Long> {
 
-    // Spring сам создаст запрос: SELECT * FROM users WHERE email = ?
+    // ПРИМЕР 1: Автоматическая генерация запроса Спрингом (Найдет юзера по email)
     Optional<User> findByEmail(String email);
 
-    // ПРИМЕР: Кастомный SELECT запрос
-    @Query("SELECT u FROM User u WHERE u.role = :role")
-    List<User> findAllByRole(@Param("role") Role role);
-
-    // ПРИМЕР: Кастомный UPDATE запрос (обратите внимание на @Modifying!)
-    @Modifying
-    @Query("UPDATE User u SET u.status = :status WHERE u.id = :id")
-    void updateUserStatus(@Param("id") Long id, @Param("status") String status);
-
+    // ПРИМЕР 2: Автоматический запрос на существование (Вернет true/false)
     boolean existsByEmail(String email);
+
+    // ПРИМЕР 3: Сложный кастомный запрос на JPQL (поиск по фрагменту email'а)
+    @Query("SELECT u FROM User u WHERE u.email LIKE %:domain%")
+    List<User> findUsersByEmailDomain(@Param("domain") String domain);
+
+    // ПРИМЕР 4: Запрос, который ИЗМЕНЯЕТ данные (UPDATE/DELETE). Обязательна аннотация @Modifying!
+    @Modifying
+    @Query("UPDATE User u SET u.status = 'BANNED' WHERE u.id = :id")
+    void banUser(@Param("id") Long id);
 }
 ```
 

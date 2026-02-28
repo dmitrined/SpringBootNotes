@@ -37,48 +37,90 @@
 
 ### 3. Пример Unit-теста (Mockito)
 ```java
-@ExtendWith(MockitoExtension.class)
-class AuthServiceTest {
+package com.example.service;
+
+import com.example.repository.UserRepository;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class) // Включаем поддержку Mockito
+class UserServiceTest {
 
     @Mock
-    private UserRepository userRepository;
+    private UserRepository userRepository; // Делаем "куклу" БД
 
     @InjectMocks
-    private AuthService authService;
+    private UserService userService; // Сюда Mockito подставит userRepository
 
     @Test
-    void register_ShouldFail_WhenUserExists() {
-        // Обучаем Mock: "Если спросят про этот email, ответь true"
-        when(userRepository.existsByEmail("test@test.com")).thenReturn(true);
+    void shouldReturnTrueWhenEmailExists() {
+        // Указываем: "когда спросят ivan@gmail.com, отвечай true"
+        when(userRepository.existsByEmail("ivan@gmail.com")).thenReturn(true);
 
-        // Проверяем, что кидается исключение
-        assertThrows(AlreadyExistsException.class, () -> {
-            authService.register(new RegisterRequest("user", "test@test.com", "123456"));
-        });
+        // Вызываем реальный метод сервиса
+        boolean exists = userService.checkUserExists("ivan@gmail.com");
+
+        // Проверяем результат
+        assertTrue(exists);
+        verify(userRepository).existsByEmail("ivan@gmail.com"); // Убеждаемся, что метод БД реально вызывался
     }
 }
 ```
 
 ---
 
-### 4. Пример Integration-теста (@MockMvc)
+### 2. Integration Tests (Интеграционные тесты)
+Тестируем, как разные слои работают вместе. Здесь поднимается реальный Spring Context.
+
 ```java
-@SpringBootTest
-@AutoConfigureMockMvc
-class AuthControllerIT {
+package com.example.controller;
+
+import com.example.dto.RegisterRequest;
+import com.example.service.UserService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
+@SpringBootTest 
+@AutoConfigureMockMvc // Позволяет отправлять фейковые HTTP запросы
+class UserControllerIT {
 
     @Autowired
-    private MockMvc mockMvc;
+    private MockMvc mockMvc; 
 
-    @MockBean // ПРИМЕР: Подменяем реальный сервис на "пустышку" (чтобы не отправлять реальные email)
-    private EmailService emailService;
+    @Autowired
+    private ObjectMapper objectMapper; // Для превращения объектов в JSON (и обратно)
+
+    @MockBean
+    private UserService userService; // Замокаем сервис, чтобы не писать в реальную БД при тесте контроллера
 
     @Test
-    void login_ShouldReturn200() throws Exception {
-        mockMvc.perform(post("/api/auth/login")
+    void shouldReturn201OnSuccessfulRegistration() throws Exception {
+        RegisterRequest request = new RegisterRequest("Ivan", "ivan@gmail.com", "password");
+        
+        // Настраиваем Mock, чтобы сервис не ругался
+        when(userService.register(any(RegisterRequest.class))).thenReturn(null);
+
+        // Имитируем POST запрос
+        mockMvc.perform(post("/api/users/register")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"username\":\"admin\", \"password\":\"123456\"}"))
-                .andExpect(status().isOk());
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated()); // Ожидаем ответ 201 Created
     }
 }
 ```

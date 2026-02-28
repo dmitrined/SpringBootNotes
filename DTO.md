@@ -22,7 +22,18 @@
 
 **DTO (UserResponse.java):**
 ```java
+package com.example.dto;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Schema(description = "Ответ с основными данными пользователя") // ПРИМЕР: Описание для Swagger
 public class UserResponse {
     

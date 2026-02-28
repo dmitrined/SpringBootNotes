@@ -21,10 +21,23 @@
 
 **Entity (User.java):**
 ```java
+package com.example.model;
+
+import jakarta.persistence.*;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import java.util.List;
+
 @Entity
 @Table(name = "users")
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class User {
+    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -36,7 +49,7 @@ public class User {
     private String password; // Это поле НИКОГДА не должно попасть в DTO
 
     // ПРИМЕР: Использование перечислений (Enum)
-    @Enumerated(EnumType.STRING) // Обязательно STRING, иначе в базе будет цифра (0, 1) и при добавлении нового статуса всё сломается
+    @Enumerated(EnumType.STRING) // Обязательно STRING, иначе в базе будет цифра
     @Column(nullable = false)
     private UserStatus status; // Например: ACTIVE, BANNED, DELETED
 

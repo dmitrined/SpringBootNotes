@@ -42,6 +42,23 @@
 
 ### Примеры кода
 ```java
+package com.example.controller;
+
+import com.example.dto.RegisterRequest;
+import com.example.dto.UserResponse;
+import com.example.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
 @Slf4j // ПРИМЕР: Добавляем логгер в контроллер
 @Tag(name = "User API", description = "Управление пользователями системы") // ПРИМЕР: Группировка для Swagger
 @RestController
@@ -56,7 +73,7 @@ public class UserController {
     @PostMapping("/register")
     public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request) {
         UserResponse response = userService.register(request);
-        // Возвращаем статус 201 Created
+        // Возвращаем статус 201 Created и само тело
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

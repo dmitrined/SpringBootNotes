@@ -34,13 +34,27 @@
 
 ### Примеры кода
 ```java
+package com.example.service;
+
+import com.example.dto.RegisterRequest;
+import com.example.dto.AuthResponse;
+import com.example.dto.UserResponse;
+import com.example.exception.AlreadyExistsException;
+import com.example.model.User;
+import com.example.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 @Slf4j // ПРИМЕР: Добавляем логгер в сервис
 @Service
 @RequiredArgsConstructor
 public class UserService {
 
-    private final UserRepository userRepository; // Репозиторий
-    private final PasswordEncoder passwordEncoder; // Утилита
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder; // Зашифрует пароль перед сохранением
 
     // ПРИМЕР 1: Запись в базу. Если будет ошибка, изменения откатятся.
     @Transactional 
@@ -61,11 +75,12 @@ public class UserService {
         return new AuthResponse("Success", user.getEmail());
     }
 
-    // ПРИМЕР 2: Только чтение. readOnly = true улучшает производительность!
+    // ПРИМЕР 2: Чтение из базы. @Transactional(readOnly = true) ускоряет работу
     @Transactional(readOnly = true)
-    public UserResponse getUserInfo(Long id) {
-        User user = userRepository.findById(id).orElseThrow();
-        return new UserResponse(user.getEmail(), user.getFirstName());
+    public UserResponse findById(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return new UserResponse(user.getEmail(), user.getEmail());
     }
 }
 ```

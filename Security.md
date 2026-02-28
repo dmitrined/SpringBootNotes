@@ -39,22 +39,48 @@ Spring Security — это мощный (и сложный) механизм д�
 
 ### Пример настройки
 ```java
+package com.example.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+
+// ПРИМЕР КОНФИГУРАЦИИ
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity // Включает аннотации вроде @PreAuthorize
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable()) // Отключаем защиту для API
+            .csrf(AbstractHttpConfigurer::disable) // Отключаем CSRF (часто делают для REST API)
+            // Настраиваем доступ к URL
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll() // Публичные пути
-                .requestMatchers("/api/admin/**").hasRole("ADMIN") // Только для админов
-                .anyRequest().authenticated() // Всё остальное — только после входа
-            );
+                .requestMatchers("/api/auth/**").permitAll() // Сюда можно всем (регистрация/логин)
+                .requestMatchers("/api/admin/**").hasRole("ADMIN") // Сюда только админам
+                .anyRequest().authenticated() // На остальные нужны права (токен)
+            )
+            // JWT обычно означает REST API, поэтому отключаем сессии
+            .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+
         return http.build();
     }
+
+    // Бин для хеширования паролей, чтобы мы могли делать passwordEncoder.encode() в сервисах
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 }
+```
 
 // ПРИМЕР ИСПОЛЬЗОВАНИЯ В СЕРВИСЕ (Method Security)
 @Slf4j
@@ -68,7 +94,6 @@ public class AdminService {
         // логика удаления
     }
 }
-```
 
 ---
 
