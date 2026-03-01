@@ -90,27 +90,40 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
 ---
 
-#### 📄 Шаг 4: `DTO` и `Mapper` (Передача данных)
-Создаем объекты для общения с внешним миром и инструмент для их превращения в Entity.
-*   **DTO:** `UserResponse.java` (без пароля!).
-*   **Mapper:** `UserMapper.java` (MapStruct).
+#### 📄 Шаг 4: `DTO` (Data Transfer Object)
+Создаем объекты для передачи данных.
+*   **Зачем:** Мы никогда не отдаем пароли или технические поля базы наружу. DTO — это "витрина" ваших данных.
 
 ```java
-// DTO - то, что увидит клиент
+// UserResponse - только те поля, которые безопасно показывать клиенту
 public record UserResponse(Long id, String username, String role) {}
 
-// Mapper - автоматический перевод Entity -> DTO
+// UserRequest - данные, которые приходят при регистрации
+public record UserRequest(String username, String password) {}
+```
+
+---
+
+#### 🔄 Шаг 5: `Mapper` (Конвертация)
+Инструмент для автоматического превращения Entity в DTO и наоборот.
+*   **Где:** `UserMapper.java` (обычно через библиотеку MapStruct).
+*   **Зачем:** Чтобы вручную не писать `dto.setName(user.getName())` для 20 полей.
+
+```java
 @Mapper(componentModel = "spring")
 public interface UserMapper {
+    // Entity -> DTO
     UserResponse toResponse(User user);
+    
+    // DTO -> Entity
+    User toEntity(UserRequest request);
 }
 ```
 
 ---
 
-#### 🧠 Шаг 5: `Service` (Логика)
+#### 🧠 Шаг 6: `Service` (Логика)
 Здесь происходит вся магия: проверка паролей, поиск в базе, маппинг.
-*   **Где:** `UserService.java`.
 
 ```java
 @Service
@@ -121,10 +134,9 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     public UserResponse register(UserRequest request) {
-        User user = new User();
-        user.setUsername(request.username());
+        User user = userMapper.toEntity(request); // Используем маппер
         user.setPassword(passwordEncoder.encode(request.password())); // Хешируем!
-        user.setRole("USER"); // По умолчанию даем роль USER
+        user.setRole("USER");
         
         User saved = userRepository.save(user);
         return userMapper.toResponse(saved);
@@ -134,9 +146,8 @@ public class UserService {
 
 ---
 
-#### 🚪 Шаг 6: `Controller` (REST API)
+#### 🚪 Шаг 7: `Controller` (REST API)
 Принимает запросы и отдает ответы.
-*   **Где:** `UserController.java`.
 
 ```java
 @RestController
@@ -154,9 +165,8 @@ public class UserController {
 
 ---
 
-#### 🛡 Шаг 7: `Security` (Защита и Доступ)
-Настраиваем, кто может обращаться к эндпоинтам.
-*   **Где:** `SecurityConfig.java`.
+#### 🛡 Шаг 8: `Security` (Защита)
+Настраиваем доступ к эндпоинтам.
 
 ```java
 @Configuration
@@ -165,8 +175,8 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) {
         return http
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/admin/**").hasRole("ADMIN") // Только админам
-                .requestMatchers("/api/users/**").permitAll()     // Всем (регистрация)
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/users/**").permitAll()
                 .anyRequest().authenticated()
             ).build();
     }
@@ -176,10 +186,13 @@ public class SecurityConfig {
 ---
 
 ### Как всё взаимодействует (Итог):
-1.  **Config** подгружает секреты.
-2.  **Controller** ловит HTTP запрос.
-3.  **Service** обрабатывает данные через **Config** и **Repository**.
-4.  **Repository** сохраняет **Model** в базу.
-5.  **Mapper** превращает **Model** в **DTO** и возвращает его через **Controller** клиенту.
+1.  **Config** подгружает секреты и настройки.
+2.  **Model** определяет таблицу в БД.
+3.  **Repository** дает методы для сохранения/поиска.
+4.  **DTO** описывает формат обмена данными.
+5.  **Mapper** переводит данные между форматами.
+6.  **Service** управляет бизнес-процессом.
+7.  **Controller** связывает бэкенд с интернетом.
+8.  **Security** проверяет права доступа на входе.
 
 *Удачи в изучении Spring Boot!* 🚀
