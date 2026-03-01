@@ -196,34 +196,56 @@ public class SecurityConfig {
 8.  **Security** проверяет права доступа на входе.
 ---
 
+---
+
 ## Типичная структура папок проекта (от А до Я)
 
-В реальном Spring Boot проекте файлы раскладываются по пакетам (папкам) в соответствии с их ролью. Это позволяет любому разработчику мгновенно найти нужный код.
+В реальном Spring Boot проекте файлы раскладываются по пакетам (папкам) в соответствии с их ролью. Ниже представлен стандарт именования и организации:
 
 ```text
-📂 src/main/java/com/example/project
- ├── 📁 config             # Шаг 1: Конфигурация (SecurityConfig, MailConfig)
- ├── 📁 entity             # Шаг 2: Модели БД (User, Order, Product)
- ├── 📁 repository         # Шаг 3: Репозитории (UserRepository, OrderRepository)
- ├── 📁 dto                # Шаг 4: Объекты передачи данных
- │    ├── 📁 request       # Входящие (UserCreateRequest, LoginRequest)
- │    └── 📁 response      # Исходящие (UserResponse, AuthResponse)
- ├── 📁 mapper             # Шаг 5: Конвертация (UserMapper, OrderMapper)
- ├── 📁 service            # Шаг 6: Бизнес-логика (UserService, PaymentService)
- ├── 📁 controller         # Шаг 7: API Контроллеры (UserController, AdminController)
- └── 📁 security           # Шаг 8: Механизмы защиты (JwtFilter, UserDetailsServiceImpl)
+📂 project-root
+ ├── 📁 config             (Шаг 1: Глобальные настройки)
+ │    ├── SecurityConfig.java         # Имя технологии + Config
+ │    └── 📁 properties
+ │         └── AppProperties.java      # Хранение @ConfigurationProperties
+ │
+ ├── 📁 entity             (Шаг 2: Модели БД)
+ │    └── User.java                   # Существительное в единственном числе
+ │
+ ├── 📁 repository         (Шаг 3: Доступ к данным)
+ │    └── UserRepository.java         # Имя сущности + Repository
+ │
+ ├── 📁 dto                (Шаг 4: Объекты передачи)
+ │    ├── 📁 request
+ │    │    └── UserCreateRequest.java  # Имя сущности + Request
+ │    └── 📁 response
+ │         └── UserResponse.java       # Имя сущности + Response
+ │
+ ├── 📁 mapper             (Шаг 5: Конвертация)
+ │    └── UserMapper.java             # Имя сущности + Mapper
+ │
+ ├── 📁 service            (Шаг 6: Бизнес-логика)
+ │    ├── UserService.java            # Имя сущности + Service
+ │    └── 📁 impl                      # (Опционально) Реализация интерфейса
+ │         └── UserServiceImpl.java    # Имя сервиса + Impl
+ │
+ ├── 📁 controller         (Шаг 7: API Эндпоинты)
+ │    └── UserController.java         # Имя сущности + Controller
+ │
+ └── 📁 security           (Шаг 8: Фильтры и защита)
+      ├── JwtFilter.java              # Техническое имя фильтра
+      └── CustomUserDetailsService.java # Имя интерфейса + Impl/Custom
 ```
 
-### Подробный разбор именования файлов:
+### Подробный разбор именования (Шпаргалка):
 
-*   **`config`**: Имя технологии + `Config` (например, `SecurityConfig`, `SwaggerConfig`).
-*   **`entity`**: Существительное в единственном числе (например, `User`, `Order`, `Product`).
-*   **`repository`**: Имя сущности + `Repository` (например, `UserRepository`).
-*   **`dto`**: Имя сущности + `Request` / `Response` (например, `UserCreateRequest`).
-*   **`mapper`**: Имя сущности + `Mapper` (например, `UserMapper`).
-*   **`service`**: Имя сущности + `Service` (например, `UserService`, `PaymentService`).
-*   **`controller`**: Имя сущности + `Controller` (например, `UserController`, `OrderController`).
-*   **`security`**: Технические файлы защиты (например, `JwtProvider`, `JwtFilter`).
+*   **`Config`**: Настройки Spring, бины и фильтры.
+*   **`Entity`**: Отражение таблицы в БД. Только поля и связи.
+*   **`Repository`**: Наследники `JpaRepository`. Только методы поиска.
+*   **`Request / Response`**: Слой DTO. Разделяйте вход и выход!
+*   **`Mapper`**: Чистые функции перевода данных.
+*   **`Service`**: Логика. Вызывает репозиторий, делает расчеты.
+*   **`Controller`**: Валидация входа и HTTP статусы ответа.
 
 ---
 
