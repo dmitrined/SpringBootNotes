@@ -220,40 +220,67 @@ public class SecurityConfig {
 
 ## Типичная структура папок проекта (от А до Я)
 
-В реальном Spring Boot проекте файлы раскладываются по пакетам и ресурсам в соответствии с их ролью:
+В реальном Spring Boot проекте файлы раскладываются по пакетам и ресурсам в соответствии с их ролью. Ниже представлен самый подробный стандарт организации:
 
 ```text
 📂 project-root
- ├── 📁 src/main/java
- │    ├── 📁 config             # Шаг 1: Конфигурация ([class])
- │    ├── 📁 model              # Шаг 3: Сущности ([class], [enum])
- │    ├── 📁 repository         # Шаг 4: Репозитории ([interface])
- │    ├── 📁 dto                # Шаг 5: Передача данных ([record])
- │    ├── 📁 mapper             # Шаг 6: Мапперы MapStruct ([interface])
- │    ├── 📁 service            # Шаг 7: Бизнес-логика ([class])
- │    ├── 📁 controller         # Шаг 8: Контроллеры ([class])
- │    └── 📁 security           # Шаг 9: Защита ([class])
+ ├── 📁 src/main/java/com/example
+ │    ├── 📁 config             (Шаг 1: Конфигурация)
+ │    │    ├── [class] SecurityConfig.java         # Настройки бинов и фильтров
+ │    │    └── 📁 properties
+ │    │         └── [class] AppProperties.java      # Класс для @ConfigurationProperties
+ │    │
+ │    ├── 📁 model              (Шаг 3: Сущности)
+ │    │    ├── [class] User.java                   # JPA Сущность
+ │    │    └── [enum]  Role.java                   # Роли (ADMIN, USER)
+ │    │
+ │    ├── 📁 repository         (Шаг 4: Репозитории)
+ │    │    └── [interface] UserRepository.java     # Интерфейс базы данных
+ │    │
+ │    ├── 📁 dto                (Шаг 5: Передача данных)
+ │    │    ├── 📁 request
+ │    │    │    └── [record] UserCreateRequest.java # Входящий JSON
+ │    │    └── 📁 response
+ │    │         └── [record] UserResponse.java      # Исходящий JSON
+ │    │
+ │    ├── 📁 mapper             (Шаг 6: Конвертация)
+ │    │    └── [interface] UserMapper.java          # Маппинг Entity <-> DTO
+ │    │
+ │    ├── 📁 service            (Шаг 7: Бизнес-логика)
+ │    │    ├── [interface] UserService.java         # Описание бизнес-функций
+ │    │    └── 📁 impl
+ │    │         └── [class] UserServiceImpl.java    # Логика реализации
+ │    │
+ │    ├── 📁 controller         (Шаг 8: API Эндпоинты)
+ │    │    └── [class] UserController.java         # REST Контроллер
+ │    │
+ │    └── 📁 security           (Шаг 9: Защита)
+ │         ├── [class] JwtFilter.java              # Проверка JWT токена
+ │         └── [class] UserDetailsServiceImpl.java # Загрузка юзера для Security
  │
  └── 📁 src/main/resources
       ├── 📁 db
-      │    ├── 📁 migration     # Скрипты Flyway (V1__init.sql)
-      │    └── 📁 changelog     # Миграции Liquibase (db.changelog-master.yaml)
+      │    ├── 📁 migration     (Шаг 2: Flyway)
+      │    │    └── V1__init.sql                    # SQL скрипт создания таблиц
+      │    └── 📁 changelog     (Шаг 2: Liquibase)
+      │         └── db.changelog-master.yaml        # Индекс миграций
       │
-      ├── application.yml       # Общие настройки
-      ├── application-dev.yml   # Настройки для разработки (Profile: dev)
-      └── application-prod.yml  # Настройки для сервера (Profile: prod)
+      ├── application.yml       # Базовые настройки
+      ├── application-dev.yml   # Профиль для разработки (DB: H2/Localhost)
+      └── application-prod.yml  # Профиль для сервера (DB: Postgres/Docker)
 ```
 
 ### Подробный разбор именования и типов:
 
 *   **`Config` [class]**: Глобальные настройки.
 *   **`Migrations` [.sql/.yaml]**: История изменений БД (Шаг 2).
-*   **`Application Profiles`**: Файлы `application-{profile}.yml` для разделения сред (тест/прод).
-*   **`Entity` [class]**: Модели данных.
-*   **`Repository` [interface]**: Интерфейсы доступа к БД.
-*   **`DTO` [record]**: Безопасные объекты обмена.
-*   **`Service` [class]**: Мозги приложения.
-*   **`Controller` [class]**: Вход в приложение.
+*   **`Application Profiles`**: Файлы `application-{profile}.yml` для разделения сред.
+*   **`Entity` [class]**: Отражение таблицы в БД.
+*   **`Repository` [interface]**: Слой доступа к данным.
+*   **`DTO` [record]**: Объекты обмена «из интернета».
+*   **`Mapper` [interface]**: Переводчики между слоями.
+*   **`Service` [class/interface]**: Главные мозги с `@Transactional`.
+*   **`Controller` [class]**: Дверь в приложение.
 
 ---
 
