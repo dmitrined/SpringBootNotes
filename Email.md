@@ -9,7 +9,21 @@
 
 Процесс:
 1. Приложение открывает соединение с SMTP-сервером.
-2. Проходит аутентификацию (логин/пароль из `application.properties`).
+2. Проходит аутентификацию (логин/пароль из `application.yml`):
+   ```yaml
+   spring:
+     mail:
+       host: smtp.gmail.com
+       port: 587
+       username: "your-email@gmail.com"
+       password: "app-password" # Пароль приложения (не основной пароль!)
+       properties:
+         mail:
+           smtp:
+             auth: true
+             starttls:
+               enable: true # Шифрование данных
+   ```
 3. Передаёт письмо (от кого, кому, тема, тело).
 4. SMTP-сервер уже доставляет письмо адресату.
 

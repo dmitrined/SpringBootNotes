@@ -32,45 +32,154 @@
 
 ---
 
-## Архитектура: Как всё взаимодействует (Пошаговый гайд)
+## Архитектура: Порядок создания слоев (Снизу вверх — от А до Я)
 
-В Spring Boot принято разделять код на слои (Layered Architecture). Когда вы хотите добавить новую бизнес-сущность (например, "Автомобиль" или "Пользователь"), вы обычно создаете классы в строго определенном порядке: от Базы Данных (снизу) до Сети (вверх).
+В Spring Boot принято разделять код на слои (Layered Architecture). Чтобы всё работало правильно, мы начинаем с **фундамента** (БД и Настройки) и постепенно поднимаемся к **фасаду** (Контроллеру).
 
-### Порядок создания слоев (Снизу вверх):
-
-#### Шаг 1: `Model` (или `Entity`)
-*   **Что это:** Java-класс, который описывает структуру таблицы в базе данных (например, таблица `users` обрастает полями `id`, `name`, `email`).
-*   **Зачем начинается с него:** Прежде чем писать логику, мы должны зафиксировать, как и какие данные будут реально храниться на жестком диске.
-
-#### Шаг 2: `Repository`
-*   **Что это:** Интерфейс (обычно наследуется от `JpaRepository`), который выступает "мостом" между приложением и базой данных.
-*   **Зачем:** Чтобы каждый раз не писать длинные SQL-запросы вручную (`SELECT * FROM users`), мы просто вызываем у готового репозитория методы вроде `.save(user)` или `.findById(1L)`.
-
-#### Шаг 3: `DTO` (Data Transfer Object)
-*   **Что это:** Простые объекты или Record (`RegisterRequest`, `UserResponse`), предназначенные исключительно для передачи данных между бэкендом и фронтендом.
-*   **Зачем нужны:** Золотое правило — **никогда не возвращать клиенту саму Entity (`Model`)**. В модели могут быть спрятаны зашифрованные пароли, технические поля (даты обновления) или циклические ссылки. DTO делает API понятным, безопасным и стабильным.
-
-#### Шаг 4: `Service`
-*   **Что это:** Главный мозг приложения. Именно здесь живет вся бизнес-логика.
-*   **Зачем:** Сервис работает как дирижер. Он принимает `DTO` (от контроллера), применяет сложные правила (проверяет email, считает скидку), конвертирует `DTO` в настоящую `Model` (Entity) и отправляет в `Repository` на сохранение.
-
-#### Шаг 5: `Controller`
-*   **Что это:** "Дверь" вашего приложения. Слой обработки HTTP-запросов (REST API).
-*   **Зачем:** Контроллер должен быть максимально "тонким" и глупым. Его единственная задача:
-    1. Принять JSON из интернета и превратить его во входящий `DTO`.
-    2. Передать этот `DTO` в `Service`.
-    3. Дождаться результата от сервиса (отвечающий `DTO`) и вернуть его клиенту вместе с правильным HTTP-статусом (200 OK, 201 Created).
-
-### Пример полного цикла (Отправка формы регистрации):
-1. **[Клиент]** Пользователь нажимает "Зарегистрироваться" на сайте. Браузер отправляет POST-запрос с JSON-телом (name, email, password).
-2. **[Controller]** Ловит этот сигнал на адресе `/api/users/register`. Превращает «сырой» JSON в красивый Java-объект `RegisterRequest` (это **DTO**).
-3. **[Controller]** Сразу передает этот `RegisterRequest` в метод `userService.register(...)`.
-4. **[Service]** Берет данные. Сначала проверяет: "А нет ли в БД человека с таким email?". Убедившись, что всё ок, он создает пустую сущность `User` (**Model**), перекладывает в нее данные (name, email) и надежно хэширует пароль.
-5. **[Service]** Передает готовую (но пока без ID) **Model** в `userRepository.save(user)`.
-6. **[Repository]** Генерирует SQL-команду `INSERT INTO...`, выполняет её в PostgreSQL. База данных присваивает пользователю "ID = 1".
-7. **[Service]** Получает сохраненного пользователя обратно от репозитория. Теперь сервис собирает чистый `UserResponse` (**DTO** без пароля) и возвращает Контроллеру.
-8. **[Controller]** Берет этот `UserResponse` и упаковывает в ответ пакета HTTP с кодом `201 Created`.
-9. **[Клиент]** Браузер получает ответ и показывает сообщение об успехе.
+### Пошаговый гайд на примере сущности `User` и системы ролей (`ADMIN`/`USER`)
 
 ---
+
+#### 🛠 Шаг 1: `Configuration` (Основание)
+Прежде чем писать код, мы определяем настройки. Например, где хранить аватарки или секретный ключ JWT.
+*   **Где:** `application.yml` и класс `@ConfigurationProperties`.
+*   **Зачем:** Чтобы менять параметры без пересборки кода.
+
+```java
+@Data
+@Configuration
+@ConfigurationProperties(prefix = "app.security")
+public class SecurityProperties {
+    private String jwtSecret; // Секрет для подписи токенов
+    private long expiration;  // Время жизни токена
+}
+```
+
+---
+
+#### 📦 Шаг 2: `Model` (Сущность)
+Создаем Java-объект, который будет "жить" в базе данных.
+*   **Где:** `User.java` (Entity).
+*   **Зачем:** Описываем структуру таблицы (id, name, роль).
+
+```java
+@Entity
+@Table(name = "users")
+@Data
+public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String username;
+    private String password;
+    private String role; // Например: 'ADMIN' или 'USER'
+}
+```
+
+---
+
+#### 🌉 Шаг 3: `Repository` (Доступ к данным)
+Создаем "мост" для работы с БД.
+*   **Где:** `UserRepository.java` (Interface).
+
+```java
+public interface UserRepository extends JpaRepository<User, Long> {
+    Optional<User> findByUsername(String username); // Поиск по имени
+}
+```
+
+---
+
+#### 📄 Шаг 4: `DTO` и `Mapper` (Передача данных)
+Создаем объекты для общения с внешним миром и инструмент для их превращения в Entity.
+*   **DTO:** `UserResponse.java` (без пароля!).
+*   **Mapper:** `UserMapper.java` (MapStruct).
+
+```java
+// DTO - то, что увидит клиент
+public record UserResponse(Long id, String username, String role) {}
+
+// Mapper - автоматический перевод Entity -> DTO
+@Mapper(componentModel = "spring")
+public interface UserMapper {
+    UserResponse toResponse(User user);
+}
+```
+
+---
+
+#### 🧠 Шаг 5: `Service` (Логика)
+Здесь происходит вся магия: проверка паролей, поиск в базе, маппинг.
+*   **Где:** `UserService.java`.
+
+```java
+@Service
+@RequiredArgsConstructor
+public class UserService {
+    private final UserRepository userRepository;
+    private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
+
+    public UserResponse register(UserRequest request) {
+        User user = new User();
+        user.setUsername(request.username());
+        user.setPassword(passwordEncoder.encode(request.password())); // Хешируем!
+        user.setRole("USER"); // По умолчанию даем роль USER
+        
+        User saved = userRepository.save(user);
+        return userMapper.toResponse(saved);
+    }
+}
+```
+
+---
+
+#### 🚪 Шаг 6: `Controller` (REST API)
+Принимает запросы и отдает ответы.
+*   **Где:** `UserController.java`.
+
+```java
+@RestController
+@RequestMapping("/api/users")
+@RequiredArgsConstructor
+public class UserController {
+    private final UserService userService;
+
+    @PostMapping("/register")
+    public ResponseEntity<UserResponse> register(@RequestBody UserRequest request) {
+        return ResponseEntity.status(201).body(userService.register(request));
+    }
+}
+```
+
+---
+
+#### 🛡 Шаг 7: `Security` (Защита и Доступ)
+Настраиваем, кто может обращаться к эндпоинтам.
+*   **Где:** `SecurityConfig.java`.
+
+```java
+@Configuration
+public class SecurityConfig {
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) {
+        return http
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/admin/**").hasRole("ADMIN") // Только админам
+                .requestMatchers("/api/users/**").permitAll()     // Всем (регистрация)
+                .anyRequest().authenticated()
+            ).build();
+    }
+}
+```
+
+---
+
+### Как всё взаимодействует (Итог):
+1.  **Config** подгружает секреты.
+2.  **Controller** ловит HTTP запрос.
+3.  **Service** обрабатывает данные через **Config** и **Repository**.
+4.  **Repository** сохраняет **Model** в базу.
+5.  **Mapper** превращает **Model** в **DTO** и возвращает его через **Controller** клиенту.
+
 *Удачи в изучении Spring Boot!* 🚀

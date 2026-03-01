@@ -54,9 +54,12 @@ logging:
     # Отключим лишний шум от Hibernate (тут можно оставить INFO/WARN)
     org.hibernate.SQL: DEBUG # Покажет SQL запросы в консоли
 
-  file:
     # Если указать имя файла, логи будут писаться и в консоль, и в файл
     name: logs/application.log
+
+# ТИП: Вы можете создавать разные уровни логирования для разных профилей 
+# (например, DEBUG в application-dev.yml и WARN в application-prod.yml)
+# Подробнее см. в заметке Configuration.md
 ```
 
 ---

@@ -1,4 +1,4 @@
-# Конфигурация, Профили и `@Value`
+# Конфигурация, Профили, `@Value` и `@ConfigurationProperties`
 
 В программировании есть одно главное правило безопасности: **НИКОГДА не хардкодить пароли, ключи и пути внутри Java-кода**.
 
@@ -81,7 +81,65 @@ public class FileService {
 
 ---
 
-### 3. Профили (Profiles) — Dev, Test, Prod
+### 3. Продвинутый уровень: `@ConfigurationProperties`
+
+Когда настроек становится много (например, 10 параметров для почты или 15 для безопасности), использовать `@Value` неудобно — код становится "грязным" от обилия аннотаций. 
+
+**Золотой стандарт Spring Boot — создание специальных классов-конфигураций.**
+
+**Преимущества:**
+*   **Группировка:** Все связанные настройки (mail, security, storage) лежат в одном объекте.
+*   **Типизация:** Spring сам превратит строку "10" из yml в `int`, а "true" в `boolean`.
+*   **Валидация:** Можно использовать `@NotBlank` или `@Min` прямо внутри конфиг-класса.
+
+#### Пример реализации:
+
+**Шаг 1: Группируем настройки в `application.yml`**
+```yaml
+app:
+  mail:
+    host: "smtp.example.com"
+    port: 587
+    username: "admin@example.com"
+    enabled: true
+```
+
+**Шаг 2: Создаем Java-класс для этих настроен**
+```java
+package com.example.config;
+
+import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
+
+@Data // Геттеры и сеттеры обязательны для работы Spring!
+@Configuration
+@ConfigurationProperties(prefix = "app.mail") // Spring найдет всё, что начинается с app.mail
+public class MailProperties {
+    private String host;
+    private int port;
+    private String username;
+    private boolean enabled;
+}
+```
+
+**Шаг 3: Используем в Сервисе**
+Теперь вам не нужно писать 4 раза `@Value`. Вы просто внедряете один объект:
+```java
+@Service
+@RequiredArgsConstructor
+public class EmailService {
+    private final MailProperties mailProps; // Все настройки уже тут!
+
+    public void send() {
+        System.out.println("Подключаюсь к " + mailProps.getHost());
+    }
+}
+```
+
+---
+
+### 4. Профили (Profiles) — Dev, Test, Prod
 
 Проблема: Когда вы пишете код дома, ваша база данных висит на `localhost:5432`. Когда вы деплоите код на рабочий сервер (Production), база данных висит на сервере `10.0.0.5` с совершенно другим паролем! 
 

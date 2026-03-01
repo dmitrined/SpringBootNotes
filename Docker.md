@@ -72,10 +72,12 @@ services:
     ports:
       - "8080:8080" # Прокидываем порт приложения наружу
     environment:
-      # ПРИМЕР: Переопределяем настройки из application.properties (для Docker среды)
+      # ПРИМЕР: Переопределяем настройки из application.yml специально для Docker
+      # Эти переменные автоматически подставятся в spring.datasource.*
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/user_management
       SPRING_DATASOURCE_USERNAME: myuser
       SPRING_DATASOURCE_PASSWORD: mypassword
+      # Управляет автоматическим созданием таблиц (только для разработки!)
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
     depends_on:
       - postgres-db # Приложение начнёт запускаться только ПОСЛЕ старта базы данных

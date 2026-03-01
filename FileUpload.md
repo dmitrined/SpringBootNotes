@@ -70,66 +70,86 @@
 
 Продолжая нашу логику из системы **Пользователей**, давайте сделаем функционал загрузки аватарки профиля.
 
-#### Сервис (FileService.java)
+#### 6.1. Настройка пути через `@ConfigurationProperties`
+
+Вместо того чтобы писать путь к папке в коде, создадим специальный класс для настроек. Это позволяет легко менять папку загрузок (например, для тестов или для разных серверов) в `application.yml`.
+
+```java
+package com.example.config;
+
+import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
+
+@Data
+@Configuration
+@ConfigurationProperties(prefix = "app.upload")
+public class FileStorageProperties {
+    // По умолчанию будет искать app.upload.avatar-dir в yml
+    private String avatarDir = "uploads/avatars"; 
+}
+```
+
+#### 6.2. Сервис (FileService.java)
 ```java
 package com.example.service;
 
+import com.example.config.FileStorageProperties;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
-
+import jakarta.annotation.PostConstruct;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.*;
 import java.util.UUID;
 
 @Slf4j
 @Service
 public class FileService {
 
-    // Папка, куда мы сохраняем (можно задать в application.properties)
-    private final Path uploadDir = Paths.get("uploads/avatars");
+    private final Path uploadDir;
 
-    public FileService() {
+    // Внедряем наш класс настроек через конструктор
+    public FileService(FileStorageProperties props) {
+        this.uploadDir = Paths.get(props.getAvatarDir())
+                .toAbsolutePath().normalize();
+    }
+
+    @PostConstruct
+    public void init() {
         try {
-            // Создаем папку, если её нет при старте
-            Files.createDirectories(uploadDir);
+            // Создаем папку при старте, если её еще нет
+            Files.createDirectories(this.uploadDir);
+            log.info("Папка для загрузок готова: {}", this.uploadDir);
         } catch (IOException e) {
-            throw new RuntimeException("Could not create upload directory!");
+            throw new RuntimeException("Не удалось создать директорию для загрузок!", e);
         }
     }
 
-    // Метод 1: ЗАГРУЗКА на сервер
     public String saveAvatar(MultipartFile file) {
         if (file.isEmpty()) {
-            throw new IllegalArgumentException("Cannot upload empty file");
+            throw new IllegalArgumentException("Файл пустой!");
         }
         
-        // 1. Генерируем безопасное уникальное имя (чтобы избежать конфликтов и взломов)
+        // Генерируем уникальное имя файла
+        String extension = "";
         String originalName = file.getOriginalFilename();
-        String extension = originalName.substring(originalName.lastIndexOf("."));
+        if (originalName != null && originalName.contains(".")) {
+            extension = originalName.substring(originalName.lastIndexOf("."));
+        }
         String uniqueFileName = UUID.randomUUID() + extension;
 
         try {
-            // 2. Указываем финальный путь на диске
-            Path destination = uploadDir.resolve(uniqueFileName);
-            
-            // 3. Копируем поток из памяти на жесткий диск
-            Files.copy(file.getInputStream(), destination, StandardCopyOption.REPLACE_EXISTING);
-            log.info("File saved beautifully to: {}", destination);
-            
-            // В реальном проекте мы сохранили бы uniqueFileName в сущность User (user.setAvatar(uniqueFileName))
+            Path targetLocation = this.uploadDir.resolve(uniqueFileName);
+            // Копируем файл в целевую папку
+            Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
             return uniqueFileName;
         } catch (IOException e) {
-            throw new RuntimeException("Failed to store file", e);
+            throw new RuntimeException("Ошибка при сохранении файла", e);
         }
     }
+}
+```
 
     // Метод 2: СКАЧИВАНИЕ с сервера (отдача файла браузеру)
     public Resource loadAvatar(String filename) {
