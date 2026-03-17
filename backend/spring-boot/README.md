@@ -375,4 +375,7 @@ public class SecurityConfig {
 
 ---
 
+[⬅️ Назад к Security](../security/README.md) | [Вернуться к Backend Index ➡️](../README.md)
+
 *Удачи в изучении Spring Boot!* 🚀
+
