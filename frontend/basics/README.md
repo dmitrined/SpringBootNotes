@@ -60,4 +60,4 @@
 
 ---
 
-[⬅️ Назад к Frontend](../README.md) | [Вперед к JavaScript ➡️](../javascript/README.md)
+[⬅️ Назад к Frontend](../README.md) | [Вперед к Web Fundamentals ➡️](Web_Fundamentals.md)

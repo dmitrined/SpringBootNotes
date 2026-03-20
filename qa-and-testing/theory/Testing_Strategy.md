@@ -58,4 +58,4 @@
 
 ---
 
-[⬅️ Назад к теории](./README.md) | [Вперед к Unit Testing ➡️](../unit-testing/README.md)
+[⬅️ Назад к Методам](./Testing_Methods.md) | [Вперед к Unit Testing ➡️](../unit-testing/README.md)

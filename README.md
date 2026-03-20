@@ -22,6 +22,7 @@
 ---
 
 ## ⚡ Быстрый доступ (Cheatsheets)
+*   [📖 Глоссарий IT-терминов (Technical English)](./glossary/README.md)
 *   [Горячие клавиши](./cheatsheets/hotkeys.md)
 *   [Вопросы для интервью](./cheatsheets/interview.md)
 

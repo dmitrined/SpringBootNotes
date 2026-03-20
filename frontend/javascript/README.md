@@ -63,4 +63,4 @@ const handleSearch = debounce((query) => console.log('Searching:', query), 500);
 
 ---
 
-[⬅️ Назад к HTML & CSS](../basics/README.md) | [Вперед к TypeScript ➡️](../typescript/README.md)
+[⬅️ Назад к HTML & CSS](../basics/README.md) | [Вперед к Advanced JS ➡️](Advanced_JS.md)

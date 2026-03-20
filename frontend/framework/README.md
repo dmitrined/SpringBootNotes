@@ -7,6 +7,7 @@
 ### React
 
 1. [**Hooks (Хуки)**](./React_Hooks.md) 🎣 — Подробный разбор useState, useEffect и других.
+2. [**Architecture (Архитектура)**](./React_Architecture.md) ⚙️ — Как работает React внутри.
 
 #### Компоненты (Components)
 * **Function Components** — Современный стандарт. Компонент = функция, возвращающая JSX.

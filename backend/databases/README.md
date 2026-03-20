@@ -6,16 +6,22 @@
 
 ### 1. [SQL vs NoSQL](./SQL_NoSQL.md) 💾
 - Реляционные (PostgreSQL) vs Нереляционные (MongoDB, Redis).
-- ACID vs BASE.
-- CAP-теорема.
+- ACID vs BASE. CAP-теорема.
 
 ### 2. [Hibernate & ORM](./Hibernate_ORM.md) 🐘
-- Жизненный цикл сущностей.
-- Проблема N+1 и способы решения.
-- Lazy vs Eager loading.
+- Жизненный цикл сущностей. Lazy vs Eager loading.
 - Кэширование (L1, L2).
 
-### 3. Реляционные базы данных (SQL) (Обзор)
+### 3. [Transactions & ACID](./Transactions_ACID.md) 🛡️
+- Уровни изоляции транзакций. Аномалии (Dirty/Phantom reads).
+- Блокировки (Optimistic vs Pessimistic).
+
+### 4. [Indexing & Optimization](./Indexing_Optimization.md) 🏎️
+- Типы индексов (B-Tree, Hash, GIN).
+- Проблема N+1 и способы её решения.
+- Оптимизация запросов и EXPLAIN.
+
+### 5. Реляционные базы данных (SQL) (Обзор)
 * **PostgreSQL / MySQL** — Архитектура и основные отличия, типы данных, партицирование, репликация (Master-Slave / Master-Master).
 * **Нормализация БД** — Зачем нужна, формы (1NF, 2NF, 3NF, BCNF) и денормализация в угоду производительности.
 * **Индексы (Indexes)** — B-Tree, Hash, GIN / GiST, как работают, композитные индексы, сканирование индекса, "покрывающие" индексы.

@@ -5,6 +5,7 @@ Docker позволяет «упаковать» приложение вмест
 ## Содержание
 
 1.  **[Подробный гайд по Docker: Dockerfile и Docker Compose](./Docker.md)** — Полный конспект с примерами для Spring Boot.
+2.  **[Docker Advanced: Продвинутые техники](./Docker_Advanced.md)** — Multi-stage сборка, оптимизация слоев, безопасность.
 
 ### Краткий справочник
 
